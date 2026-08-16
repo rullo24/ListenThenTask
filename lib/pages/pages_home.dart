@@ -130,12 +130,16 @@ class _HomePageState extends State<HomePage> {
       context: context,
       builder: (dialogContext) {
         return AlertDialog(
-          title: const Text('Add to Google Tasks?'),
+          title: const Text(
+            'Add to Google Tasks?',
+            style: TextStyle(fontSize: 24),
+          ),
           content: TextField(
             controller: controller,
             autofocus: true,
             minLines: 3,
             maxLines: null,
+            style: const TextStyle(fontSize: 22),
             decoration: const InputDecoration(border: OutlineInputBorder()),
           ),
           actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
@@ -210,10 +214,15 @@ class _HomePageState extends State<HomePage> {
       body: Stack(
         children: [
           Center(
-            child: Text(
-              _isListening
-                  ? (_displayText.isEmpty ? 'Listening...' : _displayText)
-                  : 'Tap the mic to add a task',
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 32),
+              child: Text(
+                _isListening
+                    ? (_displayText.isEmpty ? 'Listening...' : _displayText)
+                    : 'Tap the mic to add a task',
+                textAlign: TextAlign.center,
+                style: const TextStyle(fontSize: 28),
+              ),
             ),
           ),
           if (_showSuccessTick)
