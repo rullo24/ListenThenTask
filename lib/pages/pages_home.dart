@@ -5,6 +5,7 @@ import 'package:vosk_flutter/vosk_flutter.dart';
 
 import '../account/account_widget.dart';
 import '../auth/auth_service.dart';
+import '../tasks/tasks_service.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -138,13 +139,22 @@ class _HomePageState extends State<HomePage> {
               child: const Text('Cancel'),
             ),
             FilledButton(
-              onPressed: () {
+              onPressed: () async {
                 final taskText = controller.text.trim();
                 Navigator.of(dialogContext).pop();
-                // TODO: send taskText to Google Tasks (final stage)
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Would send: "$taskText"')),
-                );
+                try {
+                  await TasksService.instance.addTask(taskText);
+                  if (!mounted) return;
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Added to Google Tasks: "$taskText"')),
+                  );
+                } catch (e) {
+                  debugPrint('Add task error: $e');
+                  if (!mounted) return;
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Failed to add task: $e')),
+                  );
+                }
               },
               child: const Text('Send'),
             ),

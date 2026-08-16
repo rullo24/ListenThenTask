@@ -39,4 +39,12 @@ class AuthService {
     final auth = await user.authentication;
     return auth.accessToken;
   }
+
+  /// HTTP headers (including a fresh Authorization bearer token) for
+  /// authenticated Google API calls. Null if not signed in.
+  Future<Map<String, String>?> getAuthHeaders() async {
+    final user = currentUser.value;
+    if (user == null) return null;
+    return user.authHeaders;
+  }
 }
