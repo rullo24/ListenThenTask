@@ -106,7 +106,9 @@ class _HomePageState extends State<HomePage> {
     if (_isListening) {
       await _speechService!.stop();
       setState(() => _isListening = false);
-      final transcript = _finalizedText.trim();
+      // Use whatever's been recognized so far, including any not-yet-
+      // finalized partial — stopping mid-utterance shouldn't drop it.
+      final transcript = _displayText.trim();
       if (transcript.isNotEmpty) {
         await _showConfirmationDialog(transcript);
       }
