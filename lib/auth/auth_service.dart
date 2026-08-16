@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
@@ -9,34 +7,22 @@ class AuthService {
 
   static const _scopes = <String>['https://www.googleapis.com/auth/tasks'];
 
-  // Web application OAuth client ID from Cloud Console — required on
-  // Android when not using google-services.json/Firebase.
-  static const _serverClientId =
-      '407242777659-sv1tp1ojov67lcr94167v72cor9qlm40.apps.googleusercontent.com';
-
-  final GoogleSignIn _googleSignIn = GoogleSignIn.instance;
+  final GoogleSignIn _googleSignIn = GoogleSignIn(scopes: _scopes);
 
   final ValueNotifier<GoogleSignInAccount?> currentUser = ValueNotifier(null);
 
   bool get isSignedIn => currentUser.value != null;
 
   Future<void> init() async {
-    await _googleSignIn.initialize(serverClientId: _serverClientId);
-    _googleSignIn.authenticationEvents.listen(_handleAuthEvent);
-    unawaited(_googleSignIn.attemptLightweightAuthentication());
-  }
-
-  void _handleAuthEvent(GoogleSignInAuthenticationEvent event) {
-    currentUser.value = switch (event) {
-      GoogleSignInAuthenticationEventSignIn(user: final user) => user,
-      GoogleSignInAuthenticationEventSignOut() => null,
-    };
+    _googleSignIn.onCurrentUserChanged.listen((account) {
+      currentUser.value = account;
+    });
+    await _googleSignIn.signInSilently();
   }
 
   Future<void> signIn() async {
     try {
-      final account = await _googleSignIn.authenticate();
-      await account.authorizationClient.authorizeScopes(_scopes);
+      await _googleSignIn.signIn();
     } catch (e) {
       debugPrint('Sign-in error: $e');
     }
@@ -46,13 +32,11 @@ class AuthService {
     await _googleSignIn.signOut();
   }
 
-  /// Access token scoped for Tasks API calls. Null if not authorized yet.
+  /// Access token scoped for Tasks API calls. Null if not signed in.
   Future<String?> getAccessToken() async {
     final user = currentUser.value;
     if (user == null) return null;
-    final auth = await user.authorizationClient.authorizationForScopes(
-      _scopes,
-    );
-    return auth?.accessToken;
+    final auth = await user.authentication;
+    return auth.accessToken;
   }
 }
