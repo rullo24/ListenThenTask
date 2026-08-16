@@ -2,3 +2,42 @@
 **:w
 **;w
 **.claude
+
+# Flutter/Dart
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+build/
+*.g.dart
+*.freezed.dart
+
+# Android
+android/.gradle/
+android/captures/
+android/gradlew
+android/gradlew.bat
+android/local.properties
+android/**/GeneratedPluginRegistrant.java
+android/key.properties
+*.jks
+*.keystore
+
+# iOS (harmless to keep even if Android-only)
+ios/Flutter/.last_build_id
+ios/Pods/
+ios/.symlinks/
+ios/Flutter/Flutter.framework
+ios/Flutter/Flutter.podspec
+ios/ServiceDefinitions.json
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# Secrets — never commit OAuth client config
+android/app/google-services.json
+**/client_secret*.json
