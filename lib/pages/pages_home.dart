@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:speech_to_text/speech_to_text.dart';
 
 import '../account/account_widget.dart';
+import '../auth/auth_service.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -32,6 +33,13 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> _onMicPressed() async {
+    if (!_isListening && !AuthService.instance.isSignedIn.value) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please log in to use ListenThenTask')),
+      );
+      return;
+    }
+
     if (!_speechAvailable) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Speech recognition unavailable')),
