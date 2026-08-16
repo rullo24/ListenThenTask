@@ -1,5 +1,7 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
-import 'package:speech_to_text/speech_to_text.dart';
+import 'package:vosk_flutter/vosk_flutter.dart';
 
 import '../account/account_widget.dart';
 import '../auth/auth_service.dart';
@@ -12,39 +14,66 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  final SpeechToText _speech = SpeechToText();
+  static const _modelAsset = 'assets/models/vosk-model-small-en-us-0.15.zip';
+  static const _sampleRate = 16000;
 
-  bool _speechAvailable = false;
+  SpeechService? _speechService;
+  bool _modelReady = false;
   bool _isListening = false;
   String _transcript = '';
+  String _lastFinalText = '';
 
   @override
   void initState() {
     super.initState();
-    _initSpeech();
+    _initVosk();
   }
 
-  Future<void> _initSpeech() async {
-    final available = await _speech.initialize(
-      onError: (error) {
-        debugPrint('Speech error: $error');
-        setState(() => _isListening = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Speech error: ${error.errorMsg}')),
-        );
-      },
-      onStatus: (status) {
-        debugPrint('Speech status: $status');
-        if ((status == 'done' || status == 'notListening') && _isListening) {
-          setState(() => _isListening = false);
-          final transcript = _transcript.trim();
-          if (transcript.isNotEmpty) {
-            _showConfirmationDialog(transcript);
-          }
-        }
-      },
-    );
-    setState(() => _speechAvailable = available);
+  Future<void> _initVosk() async {
+    try {
+      final modelPath = await ModelLoader().loadFromAssets(_modelAsset);
+      final vosk = VoskFlutterPlugin.instance();
+      final model = await vosk.createModel(modelPath);
+      final recognizer = await vosk.createRecognizer(
+        model: model,
+        sampleRate: _sampleRate,
+      );
+      final speechService = await vosk.initSpeechService(recognizer);
+
+      speechService.onPartial().listen(_onPartial);
+      speechService.onResult().listen(_onResult);
+
+      setState(() {
+        _speechService = speechService;
+        _modelReady = true;
+      });
+    } catch (e) {
+      debugPrint('Vosk init error: $e');
+    }
+  }
+
+  void _onPartial(String partialJson) {
+    final text =
+        (jsonDecode(partialJson) as Map<String, dynamic>)['partial']
+            as String? ??
+        '';
+    if (text.isNotEmpty) {
+      setState(() => _transcript = text);
+    }
+  }
+
+  void _onResult(String resultJson) {
+    final text =
+        (jsonDecode(resultJson) as Map<String, dynamic>)['text'] as String? ??
+        '';
+    // Vosk's endpointing can flush the same finalized chunk more than once
+    // around a silence boundary; skip appending an exact repeat.
+    if (text.isNotEmpty && text != _lastFinalText) {
+      _lastFinalText = text;
+      setState(() {
+        _transcript = _transcript.isEmpty ? text : '$_transcript $text';
+      });
+    }
   }
 
   Future<void> _onMicPressed() async {
@@ -55,26 +84,27 @@ class _HomePageState extends State<HomePage> {
       return;
     }
 
-    if (!_speechAvailable) {
+    if (!_modelReady || _speechService == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Speech recognition unavailable')),
+        const SnackBar(content: Text('Speech model still loading')),
       );
       return;
     }
 
     if (_isListening) {
-      await _speech.stop();
-      // onStatus handles resetting _isListening and showing the dialog.
+      await _speechService!.stop();
+      setState(() => _isListening = false);
+      final transcript = _transcript.trim();
+      if (transcript.isNotEmpty) {
+        await _showConfirmationDialog(transcript);
+      }
     } else {
       setState(() {
         _transcript = '';
+        _lastFinalText = '';
         _isListening = true;
       });
-      await _speech.listen(
-        onResult: (result) {
-          setState(() => _transcript = result.recognizedWords);
-        },
-      );
+      await _speechService!.start();
     }
   }
 
@@ -90,9 +120,7 @@ class _HomePageState extends State<HomePage> {
             controller: controller,
             autofocus: true,
             maxLines: null,
-            decoration: const InputDecoration(
-              border: OutlineInputBorder(),
-            ),
+            decoration: const InputDecoration(border: OutlineInputBorder()),
           ),
           actions: [
             TextButton(
@@ -118,7 +146,7 @@ class _HomePageState extends State<HomePage> {
 
   @override
   void dispose() {
-    _speech.stop();
+    _speechService?.dispose();
     super.dispose();
   }
 

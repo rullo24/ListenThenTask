@@ -12,9 +12,9 @@ dependencies:
     sdk: flutter
 
   cupertino_icons: ^1.0.8
-  speech_to_text: ^7.4.0
   google_sign_in: ^6.3.0
   googleapis: ^13.0.0
+  vosk_flutter: ^0.3.48
 
 dev_dependencies:
   flutter_test:
@@ -25,3 +25,12 @@ dev_dependencies:
 flutter:
 
   uses-material-design: true
+
+  assets:
+    - assets/models/
+
+dependency_overrides:
+  # vosk_flutter pins an old permission_handler that uses Flutter's removed
+  # v1 plugin embedding APIs. permission_handler's public API used by
+  # vosk_flutter (Permission.microphone) is stable across this bump.
+  permission_handler: ^12.0.0
