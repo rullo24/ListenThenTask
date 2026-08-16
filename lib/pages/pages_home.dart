@@ -24,6 +24,7 @@ class _HomePageState extends State<HomePage> {
   String _finalizedText = '';
   String _partialText = '';
   String _lastFinalChunk = '';
+  bool _showSuccessTick = false;
 
   String get _displayText => [
     _finalizedText,
@@ -145,9 +146,7 @@ class _HomePageState extends State<HomePage> {
                 try {
                   await TasksService.instance.addTask(taskText);
                   if (!mounted) return;
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Added to Google Tasks: "$taskText"')),
-                  );
+                  _flashSuccessTick();
                 } catch (e) {
                   debugPrint('Add task error: $e');
                   if (!mounted) return;
@@ -162,6 +161,13 @@ class _HomePageState extends State<HomePage> {
         );
       },
     );
+  }
+
+  Future<void> _flashSuccessTick() async {
+    setState(() => _showSuccessTick = true);
+    await Future.delayed(const Duration(milliseconds: 300));
+    if (!mounted) return;
+    setState(() => _showSuccessTick = false);
   }
 
   @override
@@ -183,12 +189,20 @@ class _HomePageState extends State<HomePage> {
         ],
       ),
 
-      body: Center(
-        child: Text(
-          _isListening
-              ? (_displayText.isEmpty ? 'Listening...' : _displayText)
-              : 'Tap the mic to add a task',
-        ),
+      body: Stack(
+        children: [
+          Center(
+            child: Text(
+              _isListening
+                  ? (_displayText.isEmpty ? 'Listening...' : _displayText)
+                  : 'Tap the mic to add a task',
+            ),
+          ),
+          if (_showSuccessTick)
+            const Center(
+              child: Icon(Icons.check_circle, color: Colors.green, size: 120),
+            ),
+        ],
       ),
 
       floatingActionButton: FloatingActionButton(

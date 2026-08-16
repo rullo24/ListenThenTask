@@ -22,6 +22,7 @@ dev_dependencies:
     sdk: flutter
 
   flutter_lints: ^6.0.0
+  flutter_launcher_icons: ^0.14.4
 
 flutter:
 
@@ -29,6 +30,13 @@ flutter:
 
   assets:
     - assets/models/
+
+flutter_launcher_icons:
+  android: true
+  ios: false
+  image_path: "assets/icon/icon.png"
+  adaptive_icon_background: "#081430"
+  adaptive_icon_foreground: "assets/icon/foreground.png"
 
 dependency_overrides:
   # vosk_flutter pins an old permission_handler that uses Flutter's removed
