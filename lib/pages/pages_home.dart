@@ -132,15 +132,31 @@ class _HomePageState extends State<HomePage> {
           content: TextField(
             controller: controller,
             autofocus: true,
+            minLines: 3,
             maxLines: null,
             decoration: const InputDecoration(border: OutlineInputBorder()),
           ),
+          actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
           actions: [
             TextButton(
+              style: TextButton.styleFrom(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 28,
+                  vertical: 20,
+                ),
+                textStyle: const TextStyle(fontSize: 18),
+              ),
               onPressed: () => Navigator.of(dialogContext).pop(),
               child: const Text('Cancel'),
             ),
             FilledButton(
+              style: FilledButton.styleFrom(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 28,
+                  vertical: 20,
+                ),
+                textStyle: const TextStyle(fontSize: 18),
+              ),
               onPressed: () async {
                 final taskText = controller.text.trim();
                 Navigator.of(dialogContext).pop();
@@ -203,7 +219,7 @@ class _HomePageState extends State<HomePage> {
               child: Container(
                 padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
-                  color: Theme.of(context).scaffoldBackgroundColor,
+                  color: Theme.of(context).colorScheme.onSurface,
                   borderRadius: BorderRadius.circular(24),
                   boxShadow: [
                     BoxShadow(
@@ -223,10 +239,17 @@ class _HomePageState extends State<HomePage> {
         ],
       ),
 
-      floatingActionButton: FloatingActionButton(
-        onPressed: _onMicPressed,
-        backgroundColor: _isListening ? Colors.redAccent : null,
-        child: Icon(_isListening ? Icons.mic : Icons.mic_none),
+      floatingActionButton: SizedBox(
+        width: 112,
+        height: 112,
+        child: FloatingActionButton(
+          onPressed: _onMicPressed,
+          backgroundColor: _isListening ? Colors.redAccent : null,
+          child: Icon(
+            _isListening ? Icons.mic : Icons.mic_none,
+            size: 48,
+          ),
+        ),
       ),
 
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
