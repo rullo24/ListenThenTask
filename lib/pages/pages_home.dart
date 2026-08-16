@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:speech_to_text/speech_to_text.dart';
 
 import '../account/account_widget.dart';
 
@@ -10,8 +11,55 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  void _onMicPressed() {
-    // TODO: wire up transcribing
+  final SpeechToText _speech = SpeechToText();
+
+  bool _speechAvailable = false;
+  bool _isListening = false;
+  String _transcript = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _initSpeech();
+  }
+
+  Future<void> _initSpeech() async {
+    final available = await _speech.initialize(
+      onError: (error) => debugPrint('Speech error: $error'),
+      onStatus: (status) => debugPrint('Speech status: $status'),
+    );
+    setState(() => _speechAvailable = available);
+  }
+
+  Future<void> _onMicPressed() async {
+    if (!_speechAvailable) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Speech recognition unavailable')),
+      );
+      return;
+    }
+
+    if (_isListening) {
+      await _speech.stop();
+      setState(() => _isListening = false);
+      // TODO: trigger confirmation dialog with _transcript
+    } else {
+      setState(() {
+        _transcript = '';
+        _isListening = true;
+      });
+      await _speech.listen(
+        onResult: (result) {
+          setState(() => _transcript = result.recognizedWords);
+        },
+      );
+    }
+  }
+
+  @override
+  void dispose() {
+    _speech.stop();
+    super.dispose();
   }
 
   @override
@@ -27,11 +75,18 @@ class _HomePageState extends State<HomePage> {
         ],
       ),
 
-      body: const Center(child: Text("Tap the mic to add a task")),
+      body: Center(
+        child: Text(
+          _isListening
+              ? (_transcript.isEmpty ? 'Listening...' : _transcript)
+              : 'Tap the mic to add a task',
+        ),
+      ),
 
       floatingActionButton: FloatingActionButton(
         onPressed: _onMicPressed,
-        child: const Icon(Icons.mic),
+        backgroundColor: _isListening ? Colors.redAccent : null,
+        child: Icon(_isListening ? Icons.mic : Icons.mic_none),
       ),
 
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
