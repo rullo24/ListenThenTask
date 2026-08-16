@@ -26,10 +26,8 @@ class _HomePageState extends State<HomePage> {
   String _lastFinalChunk = '';
   bool _showSuccessTick = false;
 
-  String get _displayText => [
-    _finalizedText,
-    _partialText,
-  ].where((s) => s.isNotEmpty).join(' ');
+  String get _displayText =>
+      [_finalizedText, _partialText].where((s) => s.isNotEmpty).join(' ');
 
   @override
   void initState() {
@@ -57,9 +55,9 @@ class _HomePageState extends State<HomePage> {
       });
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Speech model failed to load: $e')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Speech model failed to load: $e')),
+      );
     }
   }
 
@@ -167,7 +165,7 @@ class _HomePageState extends State<HomePage> {
 
   Future<void> _flashSuccessTick() async {
     setState(() => _showSuccessTick = true);
-    await Future.delayed(const Duration(milliseconds: 300));
+    await Future.delayed(const Duration(milliseconds: 750));
     if (!mounted) return;
     setState(() => _showSuccessTick = false);
   }
@@ -201,8 +199,26 @@ class _HomePageState extends State<HomePage> {
             ),
           ),
           if (_showSuccessTick)
-            const Center(
-              child: Icon(Icons.check_circle, color: Colors.green, size: 120),
+            Center(
+              child: Container(
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).scaffoldBackgroundColor,
+                  borderRadius: BorderRadius.circular(24),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.25),
+                      blurRadius: 16,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: const Icon(
+                  Icons.check_circle,
+                  color: Colors.green,
+                  size: 120,
+                ),
+              ),
             ),
         ],
       ),
