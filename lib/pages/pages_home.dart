@@ -21,6 +21,7 @@ class _HomePageState extends State<HomePage> {
   SpeechService? _speechService;
   bool _modelReady = false;
   bool _isListening = false;
+  bool _isStopping = false;
   String _finalizedText = '';
   String _partialText = '';
   String _lastFinalChunk = '';
@@ -104,8 +105,17 @@ class _HomePageState extends State<HomePage> {
     }
 
     if (_isListening) {
-      await _speechService!.stop();
-      setState(() => _isListening = false);
+      setState(() => _isStopping = true);
+      // stop() often resolves almost instantly; enforce a minimum visible
+      // duration so the red "stopping" state doesn't flash by unnoticed.
+      await Future.wait([
+        _speechService!.stop(),
+        Future.delayed(const Duration(milliseconds: 400)),
+      ]);
+      setState(() {
+        _isListening = false;
+        _isStopping = false;
+      });
       // Use whatever's been recognized so far, including any not-yet-
       // finalized partial — stopping mid-utterance shouldn't drop it.
       final transcript = _displayText.trim();
@@ -255,9 +265,13 @@ class _HomePageState extends State<HomePage> {
         height: 112,
         child: FloatingActionButton(
           onPressed: _onMicPressed,
-          backgroundColor: _isListening ? Colors.redAccent : null,
+          backgroundColor: _isStopping
+              ? Colors.redAccent
+              : _isListening
+              ? Colors.amber
+              : null,
           child: Icon(
-            _isListening ? Icons.mic : Icons.mic_none,
+            _isListening || _isStopping ? Icons.mic : Icons.mic_none,
             size: 48,
           ),
         ),
