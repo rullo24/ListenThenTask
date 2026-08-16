@@ -3,6 +3,12 @@
 **;w
 **.claude
 
+# Google OAuth / API credentials — never commit
+google-services.json
+GoogleService-Info.plist
+**/client_secret*.json
+*.p12
+
 # Flutter/Dart
 .dart_tool/
 .flutter-plugins
