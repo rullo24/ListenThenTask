@@ -20,8 +20,14 @@ class _HomePageState extends State<HomePage> {
   SpeechService? _speechService;
   bool _modelReady = false;
   bool _isListening = false;
-  String _transcript = '';
-  String _lastFinalText = '';
+  String _finalizedText = '';
+  String _partialText = '';
+  String _lastFinalChunk = '';
+
+  String get _displayText => [
+    _finalizedText,
+    _partialText,
+  ].where((s) => s.isNotEmpty).join(' ');
 
   @override
   void initState() {
@@ -57,21 +63,24 @@ class _HomePageState extends State<HomePage> {
         (jsonDecode(partialJson) as Map<String, dynamic>)['partial']
             as String? ??
         '';
-    if (text.isNotEmpty) {
-      setState(() => _transcript = text);
-    }
+    setState(() => _partialText = text);
   }
 
   void _onResult(String resultJson) {
     final text =
         (jsonDecode(resultJson) as Map<String, dynamic>)['text'] as String? ??
         '';
-    // Vosk's endpointing can flush the same finalized chunk more than once
-    // around a silence boundary; skip appending an exact repeat.
-    if (text.isNotEmpty && text != _lastFinalText) {
-      _lastFinalText = text;
+    // Vosk can occasionally re-flush the same finalized chunk; skip an
+    // exact repeat of the immediately preceding chunk.
+    if (text.isNotEmpty && text != _lastFinalChunk) {
+      _lastFinalChunk = text;
       setState(() {
-        _transcript = _transcript.isEmpty ? text : '$_transcript $text';
+        _finalizedText = _finalizedText.isEmpty
+            ? text
+            : '$_finalizedText $text';
+        // This chunk is now finalized; clear the partial so it isn't
+        // shown (or appended) again once finalization catches up to it.
+        _partialText = '';
       });
     }
   }
@@ -94,14 +103,15 @@ class _HomePageState extends State<HomePage> {
     if (_isListening) {
       await _speechService!.stop();
       setState(() => _isListening = false);
-      final transcript = _transcript.trim();
+      final transcript = _finalizedText.trim();
       if (transcript.isNotEmpty) {
         await _showConfirmationDialog(transcript);
       }
     } else {
       setState(() {
-        _transcript = '';
-        _lastFinalText = '';
+        _finalizedText = '';
+        _partialText = '';
+        _lastFinalChunk = '';
         _isListening = true;
       });
       await _speechService!.start();
@@ -166,7 +176,7 @@ class _HomePageState extends State<HomePage> {
       body: Center(
         child: Text(
           _isListening
-              ? (_transcript.isEmpty ? 'Listening...' : _transcript)
+              ? (_displayText.isEmpty ? 'Listening...' : _displayText)
               : 'Tap the mic to add a task',
         ),
       ),
