@@ -42,7 +42,9 @@ class _HomePageState extends State<HomePage> {
     if (_isListening) {
       await _speech.stop();
       setState(() => _isListening = false);
-      // TODO: trigger confirmation dialog with _transcript
+      if (_transcript.trim().isNotEmpty) {
+        await _showConfirmationDialog(_transcript);
+      }
     } else {
       setState(() {
         _transcript = '';
@@ -54,6 +56,44 @@ class _HomePageState extends State<HomePage> {
         },
       );
     }
+  }
+
+  Future<void> _showConfirmationDialog(String transcript) async {
+    final controller = TextEditingController(text: transcript);
+
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: const Text('Add to Google Tasks?'),
+          content: TextField(
+            controller: controller,
+            autofocus: true,
+            maxLines: null,
+            decoration: const InputDecoration(
+              border: OutlineInputBorder(),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () {
+                final taskText = controller.text.trim();
+                Navigator.of(dialogContext).pop();
+                // TODO: send taskText to Google Tasks (final stage)
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Would send: "$taskText"')),
+                );
+              },
+              child: const Text('Send'),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
