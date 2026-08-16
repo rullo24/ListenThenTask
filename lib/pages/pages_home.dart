@@ -56,7 +56,10 @@ class _HomePageState extends State<HomePage> {
         _modelReady = true;
       });
     } catch (e) {
-      debugPrint('Vosk init error: $e');
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Speech model failed to load: $e')));
     }
   }
 
@@ -148,7 +151,6 @@ class _HomePageState extends State<HomePage> {
                   if (!mounted) return;
                   _flashSuccessTick();
                 } catch (e) {
-                  debugPrint('Add task error: $e');
                   if (!mounted) return;
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(content: Text('Failed to add task: $e')),

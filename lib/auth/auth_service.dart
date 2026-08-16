@@ -20,13 +20,7 @@ class AuthService {
     await _googleSignIn.signInSilently();
   }
 
-  Future<void> signIn() async {
-    try {
-      await _googleSignIn.signIn();
-    } catch (e) {
-      debugPrint('Sign-in error: $e');
-    }
-  }
+  Future<void> signIn() => _googleSignIn.signIn();
 
   Future<void> signOut() async {
     await _googleSignIn.signOut();

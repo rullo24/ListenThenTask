@@ -15,7 +15,16 @@ class AccountWidget extends StatelessWidget {
           return IconButton(
             icon: const Icon(Icons.account_circle),
             tooltip: 'Sign in with Google',
-            onPressed: () => AuthService.instance.signIn(),
+            onPressed: () async {
+              final messenger = ScaffoldMessenger.of(context);
+              try {
+                await AuthService.instance.signIn();
+              } catch (e) {
+                messenger.showSnackBar(
+                  SnackBar(content: Text('Sign-in failed: $e')),
+                );
+              }
+            },
           );
         }
 
