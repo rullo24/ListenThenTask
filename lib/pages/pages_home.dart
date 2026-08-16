@@ -33,7 +33,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> _onMicPressed() async {
-    if (!_isListening && !AuthService.instance.isSignedIn.value) {
+    if (!_isListening && !AuthService.instance.isSignedIn) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please log in to use ListenThenTask')),
       );
