@@ -1,17 +1,28 @@
-# listen_then_task
+# ListenThenTask
 
-A new Flutter project.
+A personal Android app that transcribes speech and adds it to Google Tasks — built to be more reliable than asking Gemini to do it by voice.
 
-## Getting Started
+Tap the mic, speak, tap again to stop. A confirmation dialog shows the transcribed text (editable) before sending it to your Google Tasks list.
 
-This project is a starting point for a Flutter application.
+## How it works
 
-A few resources to get you started if this is your first Flutter project:
+- **Speech-to-text**: [Vosk](https://alphacephei.com/vosk/) running fully on-device via `vosk_flutter`, with a bundled offline English model (`assets/models/`). No cloud STT service, no network dependency for transcription.
+- **Auth**: Google Sign-In (`google_sign_in`, classic API) with the `tasks` scope, silently re-authenticating on launch so you don't have to sign in every time.
+- **Tasks**: `googleapis`'s `TasksApi`, called with an authenticated HTTP client built from the signed-in account's auth headers. Inserts into your default task list (`@default`).
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
+## Project layout
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+- `lib/pages/pages_home.dart` — main screen: mic button, live transcript, confirmation dialog
+- `lib/auth/` — Google Sign-In wrapper
+- `lib/account/` — sign-in/profile UI in the app bar
+- `lib/tasks/` — Google Tasks API wrapper
+- `lib/app/` — Vektis brand theme/colors
+
+## Running it
+
+```bash
+flutter pub get
+flutter run -d <device-id>
+```
+
+Android only. Requires a Google Cloud project with the Tasks API enabled and an OAuth client registered for the app's package name + SHA-1 (see `au.com.vektis.listen_then_task`).
