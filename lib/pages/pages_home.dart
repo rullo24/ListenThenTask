@@ -26,8 +26,23 @@ class _HomePageState extends State<HomePage> {
 
   Future<void> _initSpeech() async {
     final available = await _speech.initialize(
-      onError: (error) => debugPrint('Speech error: $error'),
-      onStatus: (status) => debugPrint('Speech status: $status'),
+      onError: (error) {
+        debugPrint('Speech error: $error');
+        setState(() => _isListening = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Speech error: ${error.errorMsg}')),
+        );
+      },
+      onStatus: (status) {
+        debugPrint('Speech status: $status');
+        if ((status == 'done' || status == 'notListening') && _isListening) {
+          setState(() => _isListening = false);
+          final transcript = _transcript.trim();
+          if (transcript.isNotEmpty) {
+            _showConfirmationDialog(transcript);
+          }
+        }
+      },
     );
     setState(() => _speechAvailable = available);
   }
@@ -49,10 +64,7 @@ class _HomePageState extends State<HomePage> {
 
     if (_isListening) {
       await _speech.stop();
-      setState(() => _isListening = false);
-      if (_transcript.trim().isNotEmpty) {
-        await _showConfirmationDialog(_transcript);
-      }
+      // onStatus handles resetting _isListening and showing the dialog.
     } else {
       setState(() {
         _transcript = '';
